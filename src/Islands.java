@@ -130,7 +130,7 @@ class Graph {
         double travelTime = Double.POSITIVE_INFINITY;
         // Loop through u's edge list to find the edge that points to v
         for (Edge edge : u.edges) {
-            if (edge.destination.name == v.name) {
+            if (edge.destination.name.equals(v.name)) {
                 travelTime = edge.travelTime;
                 if (v.shortestPathEstimate > (u.shortestPathEstimate + travelTime)) {
                     v.shortestPathEstimate = u.shortestPathEstimate + travelTime;
