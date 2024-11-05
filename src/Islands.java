@@ -226,7 +226,7 @@ class Graph {
                 for (Edge edge : current.edges) {
                     Vertex neighbor = edge.destination;
     
-                    // Calculate the resource amount to send
+                    // Calculate the resource amount to send to this neighbor
                     int resourceToSend = Math.min(cargoCapacity, availableResource);
     
                     if (resourceToSend > 0) {
