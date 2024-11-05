@@ -70,11 +70,11 @@ public class Question2 {
     // Main method to run the application
     public static void main(String[] args) {
         // Creating islands
-        Island niihau = new Island("Niʻihau", 10.0); // Resource producer
-        Island kauai = new Island("Kauaʻi", 6.0);
-        Island oahu = new Island("Oʻahu", 8.0);
+        Island niihau = new Island("Niihau", 10.0); // Resource producer
+        Island kauai = new Island("Kauai", 6.0);
+        Island oahu = new Island("Oahu", 8.0);
         Island maui = new Island("Maui", 7.0);
-        Island lanai = new Island("Lānaʻi", 6.0);
+        Island lanai = new Island("Lānai", 6.0);
 
         // Adding routes (direct connections)
         niihau.addRoute(kauai, 1.0);
