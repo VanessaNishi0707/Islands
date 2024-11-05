@@ -209,51 +209,6 @@ class Graph {
         }
     }
 
-    public void distributeResource(Vertex start, int totalResource, int cargoCapacity) {
-        start.setNumResource2(start.getNumResource2() + totalResource);
-    
-        Queue<Vertex> queue = new LinkedList<>();
-        Map<Vertex, Integer> distributedResources = new HashMap<>();
-        queue.add(start);
-    
-        distributedResources.put(start, totalResource);
-    
-        while (!queue.isEmpty()) {
-            Vertex current = queue.poll();
-            int availableResource = distributedResources.getOrDefault(current, 0);
-    
-            // Ensure current.edges is not null before iterating
-            if (current.edges != null) {
-                for (Edge edge : current.edges) {
-                    Vertex neighbor = edge.destination;
-    
-                    // Calculate the resource amount to send
-                    int resourceToSend = Math.min(cargoCapacity, availableResource);
-    
-                    if (resourceToSend > 0) {
-                        availableResource -= resourceToSend;
-                        neighbor.setNumResource2(neighbor.getNumResource2() + resourceToSend);
-    
-                        if (!distributedResources.containsKey(neighbor)) {
-                            queue.add(neighbor);
-                        }
-    
-                        distributedResources.put(neighbor, distributedResources.getOrDefault(neighbor, 0) + resourceToSend);
-                    }
-                }
-            }
-        }
-    
-        // Output the final resource allocation for each vertex
-        for (Vertex vertex : vertices) {
-            System.out.println(vertex.name + " has " + vertex.getNumResource2() + " units of Resource2.");
-        }
-    }
-    
-    
-    
-    
-
     public static void main(String[] args) throws Exception {
         Graph graph = new Graph();
         Vertex A = new Vertex("A", 0, 0, 0);
@@ -281,11 +236,5 @@ class Graph {
         graph.addEdge(E, G, 6.0);
 
         graph.shareKnowledge(graph, D, "some knowledge");
-
-        // Part 2: Resource Distribution
-        int totalResource = 100;
-        int cargoCapacity = 10;
-        graph.distributeResource(D, totalResource, cargoCapacity);
-
     }   
 }
