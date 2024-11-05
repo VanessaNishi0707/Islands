@@ -1,275 +1,91 @@
 package Question2;
+
 import java.util.*;
 
-enum Color {
-    WHITE,
-    GREY,
-    BLACK
-}
+public class Question2 {
 
-class Vertex implements Comparable<Vertex> {
-    public String name;
-    public int numPeople;
-    public List<String> knowledge; // list of knowledge shared
-    private int numResource2;
-    private int numResource3;
-    public int lastVisited;
-    public List<Edge> edges; // set of edges pointing out from vertex
+    // Class representing an Island
+    static class Island {
+        String name;
+        double capacity; // Maximum capacity of the canoe
+        Map<Island, Double> routes; // Neighboring islands with the distance/cost
 
-    // Used for traversing function
-    public Vertex parent;
-    public Color color;
-    public int distance;
+        public Island(String name, double capacity) {
+            this.name = name;
+            this.capacity = capacity;
+            this.routes = new HashMap<>();
+        }
 
-    // Used for intialize graph function
-    public double shortestPathEstimate;
-
-    Vertex(String name, int numPeople, int numResource2, int numResource3) {
-        this.name = name;
-        this.numPeople = numPeople;
-        this.knowledge = new ArrayList<String>();
-        this.numResource2 = numResource2;
-        this.numResource3 = numResource3;
-        this.edges = new ArrayList<>();
-        parent = null;
-        color = Color.WHITE;
-        distance = 0;
-        shortestPathEstimate = -1;
-        lastVisited = 0;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public double getShortestPathEstimate() {
-        return shortestPathEstimate;
-    }
-
-    @Override public int compareTo(Vertex a)
-    { return 0; }
-
-    public int getNumResource2() {
-        return numResource2;
-    }
-
-    public void setNumResource2(int numResource2) {
-        this.numResource2 = numResource2;
-    }
-}
-
-class Edge {
-    private Vertex source;
-    public Vertex destination;
-    public double travelTime;
-
-    Edge(Vertex source, Vertex destination, double travelTime) {
-        this.source = source;
-        this.destination = destination;
-        this.travelTime = travelTime;
-    }
-
-    public Vertex getDestination() {
-        return destination;
-    }
-}
-
-class Graph {
-    private Map<Vertex, List<Vertex>> adjacencyList; // maps each vertex -> vertices it's connected to
-    private List<Vertex> vertices;
-    Vertex graphSource; 
-
-    Graph() {
-        adjacencyList = new HashMap<Vertex, List<Vertex>>(); 
-        vertices = new ArrayList<Vertex>();
-        graphSource = null;
-    }
-
-    public void addVertex(Vertex v) {
-        adjacencyList.putIfAbsent(v, new ArrayList<>()); 
-        vertices.add(v);
-
-        if (graphSource == null) { // graph empty
-            graphSource = v; 
+        public void addRoute(Island island, double cost) {
+            routes.put(island, cost);
         }
     }
 
-    public void addEdge(Vertex start, Vertex destination, double travelTime) {
-        Edge e = new Edge(start, destination, travelTime);
-        if (start.edges == null) {
-            start.edges = new ArrayList<>();
-        }
-        adjacencyList.get(start).add(destination); // add v to start's vertex list
-        start.edges.add(e); // add edge to source's edge list
-    }
+    // Class to manage resource distribution
+    static class ResourceDistribution {
+        private final Island source; // The island producing the resource
+        private final double totalResources; // Total resources available to distribute
 
-    public void printVertices(Graph g) { // traverse graph using BFS
-        graphSource.color = Color.GREY;
-        
-        Queue<Vertex> queue = new LinkedList<>();
-        queue.add(graphSource);
-        System.out.println(graphSource.name + " " + graphSource.distance);
-        while (!queue.isEmpty()) {
-            Vertex u = queue.remove();
-            
-            adjacencyList.get(u).forEach((v) -> {
-                if (v.color == Color.WHITE) {
-                    v.color = Color.GREY;
-                    v.distance = u.distance + 1;
-                    v.parent = u;
-                    System.out.println(v.name + " " + v.distance + " parent:" + v.parent.name);
-                    queue.add(v);
+        public ResourceDistribution(Island source, double totalResources) {
+            this.source = source;
+            this.totalResources = totalResources;
+        }
+
+        public void distributeResources() {
+            // A queue to manage distribution
+            PriorityQueue<Island> queue = new PriorityQueue<>(Comparator.comparingDouble(island -> island.routes.size()));
+            Set<Island> visited = new HashSet<>();
+            queue.add(source);
+
+            double remainingResources = totalResources;
+
+            while (!queue.isEmpty() && remainingResources > 0) {
+                Island current = queue.poll();
+
+                if (visited.contains(current)) {
+                    continue;
                 }
-            });
-            u.color = Color.BLACK;
-        }
-    }
+                visited.add(current);
 
-    // Auxillary function for shareKnowledge (modified ver. of Dijkstra)
-    public void initializeGraph(Graph graph, Vertex source) {
-        for (Map.Entry<Vertex, List<Vertex>> entry : adjacencyList.entrySet()) {
-            entry.getKey().shortestPathEstimate = Double.POSITIVE_INFINITY;
-            entry.getKey().parent = null;
-            //System.out.println(entry.getKey().shortestPathEstimate);
-        }
-        source.shortestPathEstimate = 0;
-    }
-    // Auxillary function for shareKnowledge (modified ver. of Dijkstra)
-    public boolean relax(Vertex u, Vertex v) {
-        double travelTime = Double.POSITIVE_INFINITY;
-        // Loop through u's edge list to find the edge that points to v
-        for (Edge edge : u.edges) {
-            if (edge.destination.name.equals(v.name)) {
-                travelTime = edge.travelTime;
-                if (v.shortestPathEstimate > (u.shortestPathEstimate + travelTime)) {
-                    v.shortestPathEstimate = u.shortestPathEstimate + travelTime;
-                    v.parent = u;
-                    return true;
+                // Distribute resources to the current island
+                double resourcesToDistribute = Math.min(current.capacity, remainingResources);
+                System.out.printf("Distributing %.2f resources to island %s\n", resourcesToDistribute, current.name);
+                remainingResources -= resourcesToDistribute;
+
+                // Add neighboring islands to the queue
+                for (Island neighbor : current.routes.keySet()) {
+                    if (!visited.contains(neighbor)) {
+                        queue.add(neighbor);
+                    }
                 }
             }
-        }
-        return false;
-    }
 
-    public void shareKnowledge(Graph graph, Vertex source, String knowledgeShared) {
-        initializeGraph(graph, source);
-        ArrayList<Vertex> shortestPath = new ArrayList<Vertex>();
-        PriorityQueue<Vertex> prioQueue = new PriorityQueue<Vertex>(graph.adjacencyList.size(), new VertexComparator());
-
-        prioQueue.add(source);
-        
-        while (!prioQueue.isEmpty()) {
-            Vertex u = prioQueue.poll();
-            shortestPath.add(u);
-            u.knowledge.add(knowledgeShared);
-            u.lastVisited += 1;
-            adjacencyList.get(u).forEach((v) -> {
-                if (v.lastVisited < 1 || v.lastVisited > 10 && v.numPeople > 100) {
-                    relax(u, v);
-                    prioQueue.add(v);
-                }
-            });
-        }
-
-        for (Vertex vertex : vertices) {
-            if (vertex.lastVisited < 1) {
-                prioQueue.add(vertex);
-
-                while (!prioQueue.isEmpty()) {
-                    Vertex u = prioQueue.poll();
-                    shortestPath.add(u);
-                    u.knowledge.add(knowledgeShared);
-                    u.lastVisited += 1;
-                    adjacencyList.get(u).forEach((v) -> {
-                        if ((v.lastVisited < 1) || v.lastVisited > 10 && v.numPeople > 100) {
-                            if (relax(u, v)) {
-                                prioQueue.add(v);
-                            }
-                        }
-                    });
-                }
+            if (remainingResources > 0) {
+                System.out.println("Not all resources could be distributed.");
+            } else {
+                System.out.println("All resources have been distributed.");
             }
         }
-
-        for (Vertex v : shortestPath) {
-            System.out.println(v.name);
-        }
     }
 
-    class VertexComparator implements Comparator<Vertex> {
-        public int compare(Vertex v1, Vertex v2) {
-            if (v1.shortestPathEstimate > v2.shortestPathEstimate) {
-                return 1;
-            }
-            else if (v1.shortestPathEstimate < v2.shortestPathEstimate) {
-                return -1;
-            }
-            return 0;
-        }
+    // Main method to run the application
+    public static void main(String[] args) {
+        // Creating islands
+        Island niihau = new Island("Niʻihau", 10.0); // Resource producer
+        Island kauai = new Island("Kauaʻi", 5.0);
+        Island oahu = new Island("Oʻahu", 8.0);
+        Island maui = new Island("Maui", 7.0);
+        Island lanai = new Island("Lānaʻi", 6.0);
+
+        // Adding routes (direct connections)
+        niihau.addRoute(kauai, 1.0);
+        niihau.addRoute(oahu, 2.0);
+        kauai.addRoute(maui, 1.5);
+        oahu.addRoute(maui, 1.0);
+        maui.addRoute(lanai, 0.5);
+
+        // Assuming a total of 30 resources available from Niʻihau
+        ResourceDistribution distribution = new ResourceDistribution(niihau, 30);
+        distribution.distributeResources();
     }
-
-    public void distributeResource(Vertex start, int totalResource, int cargoCapacity) {
-        // Calculate the number of neighboring vertices
-        List<Vertex> neighbors = new ArrayList<>();
-        for (Edge edge : start.edges) {
-            neighbors.add(edge.getDestination());
-        }
-    
-        // Calculate the amount of resource to distribute to each neighbor
-        int numNeighbors = neighbors.size();
-        int resourceToDistribute = Math.min(totalResource, cargoCapacity * numNeighbors);
-        int resourcePerNeighbor = resourceToDistribute / numNeighbors;
-    
-        // Distribute resources to each neighbor
-        for (Vertex neighbor : neighbors) {
-            // Ensure we do not exceed cargo capacity
-            int actualResourceToSend = Math.min(resourcePerNeighbor, cargoCapacity);
-            neighbor.setNumResource2(neighbor.getNumResource2() + actualResourceToSend);
-            totalResource -= actualResourceToSend; // Reduce the total resource by the amount sent
-        }
-    
-        // Update the starting vertex (D) to reflect the remaining resources
-        start.setNumResource2(start.getNumResource2() + totalResource);
-    
-        // Output the final resource allocation for each vertex
-        for (Vertex vertex : vertices) {
-            System.out.println(vertex.name + " has " + vertex.getNumResource2() + " units of Resource2.");
-        }
-    }
-    
-    public static void main(String[] args) throws Exception {
-        Graph graph = new Graph();
-        Vertex A = new Vertex("A", 0, 0, 0);
-        Vertex B = new Vertex("B", 0, 0, 0);
-        Vertex C = new Vertex("C", 0, 0, 0);
-        Vertex D = new Vertex("D", 0, 0, 0);
-        Vertex E = new Vertex("E", 0, 0, 0);
-        Vertex F = new Vertex("F", 0, 0, 0);
-        Vertex G = new Vertex("G", 0, 0, 0);
-
-
-        graph.addVertex(A);
-        graph.addVertex(B);
-        graph.addVertex(C);
-        graph.addVertex(D);
-        graph.addVertex(E);
-        graph.addVertex(F);
-        graph.addVertex(G);
-       
-        graph.addEdge(A, B, 1.0);
-        graph.addEdge(B, C, 2.0);
-        graph.addEdge(B, D, 3.0);
-        graph.addEdge(D, E, 4.0);
-        graph.addEdge(E, F, 5.0);
-        graph.addEdge(E, G, 6.0);
-
-        graph.shareKnowledge(graph, D, "some knowledge");
-
-        // Part 2: Resource Distribution
-        int totalResource = 100;
-        int cargoCapacity = 10;
-        graph.distributeResource(D, totalResource, cargoCapacity);
-
-    }   
 }
-
