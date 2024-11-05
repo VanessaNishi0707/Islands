@@ -1,5 +1,6 @@
-
+package Question1;
 import java.util.*;
+
 
 enum Color {
     WHITE,
