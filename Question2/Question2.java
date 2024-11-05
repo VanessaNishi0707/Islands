@@ -33,38 +33,37 @@ public class Question2 {
 
         public void distributeResources() {
             // A queue to manage distribution
-            PriorityQueue<Island> queue = new PriorityQueue<>(Comparator.comparingDouble(island -> island.routes.size()));
+            Queue<Island> queue = new LinkedList<>();
             Set<Island> visited = new HashSet<>();
             queue.add(source);
+            visited.add(source);
 
-            double remainingResources = totalResources;
-
-            while (!queue.isEmpty() && remainingResources > 0) {
+            // First, find all reachable islands
+            List<Island> reachableIslands = new ArrayList<>();
+            while (!queue.isEmpty()) {
                 Island current = queue.poll();
-
-                if (visited.contains(current)) {
-                    continue;
-                }
-                visited.add(current);
-
-                // Distribute resources to the current island
-                double resourcesToDistribute = Math.min(current.capacity, remainingResources);
-                System.out.printf("Distributing %.2f resources to island %s\n", resourcesToDistribute, current.name);
-                remainingResources -= resourcesToDistribute;
+                reachableIslands.add(current);
 
                 // Add neighboring islands to the queue
                 for (Island neighbor : current.routes.keySet()) {
                     if (!visited.contains(neighbor)) {
                         queue.add(neighbor);
+                        visited.add(neighbor);
                     }
                 }
             }
 
-            if (remainingResources > 0) {
-                System.out.println("Not all resources could be distributed.");
-            } else {
-                System.out.println("All resources have been distributed.");
+            // Calculate equal distribution
+            double numIslands = reachableIslands.size();
+            double resourcesPerIsland = totalResources / numIslands;
+
+            // Distribute resources equally
+            for (Island island : reachableIslands) {
+                double resourcesToDistribute = Math.min(island.capacity, resourcesPerIsland);
+                System.out.printf("Distributing %.2f resources to island %s\n", resourcesToDistribute, island.name);
             }
+
+            System.out.println("All resources have been distributed.");
         }
     }
 
@@ -72,7 +71,7 @@ public class Question2 {
     public static void main(String[] args) {
         // Creating islands
         Island niihau = new Island("Niʻihau", 10.0); // Resource producer
-        Island kauai = new Island("Kauaʻi", 5.0);
+        Island kauai = new Island("Kauaʻi", 6.0);
         Island oahu = new Island("Oʻahu", 8.0);
         Island maui = new Island("Maui", 7.0);
         Island lanai = new Island("Lānaʻi", 6.0);
