@@ -181,6 +181,10 @@ class Graph {
                 }
             }
         }
+
+        for (Vertex v : shortestPath) {
+            System.out.println(v.name);
+        }
     }
 
     class VertexComparator implements Comparator<Vertex> {
