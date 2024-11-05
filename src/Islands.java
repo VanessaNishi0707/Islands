@@ -209,45 +209,34 @@ class Graph {
     }
 
     public void distributeResource(Vertex start, int totalResource, int cargoCapacity) {
-        start.setNumResource2(start.getNumResource2() + totalResource);
-    
-        Queue<Vertex> queue = new LinkedList<>();
-        Map<Vertex, Integer> distributedResources = new HashMap<>();
-        queue.add(start);
-    
-        distributedResources.put(start, totalResource);
-    
-        while (!queue.isEmpty()) {
-            Vertex current = queue.poll();
-            int availableResource = distributedResources.getOrDefault(current, 0);
-    
-            // Ensure current.edges is not null before iterating
-            if (current.edges != null) {
-                for (Edge edge : current.edges) {
-                    Vertex neighbor = edge.destination;
-    
-                    // Calculate the resource amount to send to this neighbor
-                    int resourceToSend = Math.min(cargoCapacity, availableResource);
-    
-                    if (resourceToSend > 0) {
-                        availableResource -= resourceToSend;
-                        neighbor.setNumResource2(neighbor.getNumResource2() + resourceToSend);
-    
-                        if (!distributedResources.containsKey(neighbor)) {
-                            queue.add(neighbor);
-                        }
-    
-                        distributedResources.put(neighbor, distributedResources.getOrDefault(neighbor, 0) + resourceToSend);
-                    }
-                }
-            }
+        // Calculate the number of neighboring vertices
+        List<Vertex> neighbors = new ArrayList<>();
+        for (Edge edge : start.edges) {
+            neighbors.add(edge.getDestination());
         }
+    
+        // Calculate the amount of resource to distribute to each neighbor
+        int numNeighbors = neighbors.size();
+        int resourceToDistribute = Math.min(totalResource, cargoCapacity * numNeighbors);
+        int resourcePerNeighbor = resourceToDistribute / numNeighbors;
+    
+        // Distribute resources to each neighbor
+        for (Vertex neighbor : neighbors) {
+            // Ensure we do not exceed cargo capacity
+            int actualResourceToSend = Math.min(resourcePerNeighbor, cargoCapacity);
+            neighbor.setNumResource2(neighbor.getNumResource2() + actualResourceToSend);
+            totalResource -= actualResourceToSend; // Reduce the total resource by the amount sent
+        }
+    
+        // Update the starting vertex (D) to reflect the remaining resources
+        start.setNumResource2(start.getNumResource2() + totalResource);
     
         // Output the final resource allocation for each vertex
         for (Vertex vertex : vertices) {
             System.out.println(vertex.name + " has " + vertex.getNumResource2() + " units of Resource2.");
         }
     }
+    
     
     
     
