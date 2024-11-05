@@ -151,7 +151,7 @@ class Graph {
         
         while (!prioQueue.isEmpty()) {
             Vertex u = prioQueue.poll();
-            shortestPath.addLast(u);
+            shortestPath.add(u);
             u.knowledge.add(knowledgeShared);
             u.lastVisited += 1;
             adjacencyList.get(u).forEach((v) -> {
